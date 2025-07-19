@@ -9,50 +9,7 @@ import { LoginDto } from '../../models/auth.model';
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  template: `
-    <div class="login-container">
-      <div class="login-card">
-        <h2>Login</h2>
-        <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-          <div class="form-group">
-            <label for="email">Email:</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              [(ngModel)]="loginData.email" 
-              required 
-              class="form-control"
-              placeholder="Enter your email">
-          </div>
-          
-          <div class="form-group">
-            <label for="password">Password:</label>
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              [(ngModel)]="loginData.password" 
-              required 
-              class="form-control"
-              placeholder="Enter your password">
-          </div>
-          
-          <button type="submit" [disabled]="!loginForm.valid || isLoading" class="btn btn-primary">
-            {{ isLoading ? 'Logging in...' : 'Login' }}
-          </button>
-        </form>
-        
-        <div *ngIf="error" class="error-message">
-          {{ error }}
-        </div>
-        
-        <div class="register-link">
-          Don't have an account? <a routerLink="/register">Register here</a>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {

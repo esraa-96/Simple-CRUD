@@ -1,68 +1,79 @@
 using Base.Application;
+using Base.Application.CreateUser;
+using Base.Application.DeleteUser;
+using Base.Application.GetAllUsers;
+using Base.Application.GetUserById;
+using Base.Application.UpdateUser;
 using Base.Domain;
-using Base.Infrastructure;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-namespace Base.Controllers;
+
+namespace Base.WebApi.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class UserController(IUserRepository userRepository, IAuthService authService) : ControllerBase
+public class UserController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<User>>> GetUsers()
     {
-        var users = await Task.Run(() => userRepository.GetAll().ToList());
+        var users = await mediator.Send(new GetAllUsersQuery());
         return Ok(users);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<User>> GetUser(Guid id)
     {
-        var user = await Task.Run(() => userRepository.GetById(id));
+        var user = await mediator.Send(new GetUserByIdQuery(id));
         if (user == null)
             return NotFound();
         return Ok(user);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateUser(User user)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserCommand command)
     {
-        await Task.Run(() => userRepository.Add(user));
+        var user = await mediator.Send(command);
         return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(Guid id, User user)
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserCommand command)
     {
-        if (id != user.Id)
+        if (id != command.Id)
             return BadRequest();
 
-        await Task.Run(() => userRepository.Update(user));
+        var result = await mediator.Send(command);
+        if (!result)
+            return NotFound();
         return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        await Task.Run(() => userRepository.Delete(id));
+        var result = await mediator.Send(new DeleteUserCommand(id));
+        if (!result)
+            return NotFound();
         return NoContent();
     }
+
     [HttpPost("register")]
-    public IActionResult Register([FromBody] RegisterCommand command)
+    public async Task<IActionResult> Register([FromBody] RegisterCommand command)
     {
-        var result = authService.Register(command.RegisterDto.Username, command.RegisterDto.Email, command.RegisterDto.Password);
+        var result = await mediator.Send(command);
         if (!result)
             return BadRequest(new { message = "Registration failed. Email may already be in use." });
         return Ok(new { message = "Registration successful." });
     }
 
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginCommand command)
+    public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
         try
         {
-            var response = authService.Authenticate(command.LoginDto.Email, command.LoginDto.Password);
+            var response = await mediator.Send(command);
             return Ok(response);
         }
         catch (UnauthorizedAccessException)

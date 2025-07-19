@@ -38,7 +38,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<BaseDbContext>
     //for testing
     (options => options.UseInMemoryDatabase("BaseDb"));
-    //(options =>options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+//(options =>options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -68,7 +68,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(MediatRRegistration.Assembly));
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
